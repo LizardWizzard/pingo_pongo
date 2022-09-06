@@ -10,7 +10,11 @@ glommio = { path = "../glommio/glommio" }
 nix = "*"
 futures-lite = "*"
 tokio = { version = "*", features = ["full"] }
+tokio-uring = "*"
+monoio = { path = "../../checkout/monoio/monoio" }
 
 [profile.release]
 opt-level = 3
 debug = true
+# panic = "abort"
+codegen-units = 1

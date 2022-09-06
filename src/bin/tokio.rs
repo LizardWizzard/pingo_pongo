@@ -1,9 +1,9 @@
-use std::{io, thread, time::{Duration, Instant}};
+use std::{thread, time::{Duration, Instant}};
 
+use pingo_pongo::{bind_to_cpu_set, elapsed, ITERATIONS};
 use tokio::{io::{AsyncReadExt, AsyncWriteExt}, net::{TcpListener, TcpStream}};
 
 
-const ITERATIONS: usize = 5_000_000;
 
 /*
 const ITERATIONS: usize = 1_000_000;
@@ -14,16 +14,6 @@ const ITERATIONS: usize = 5_000_000;
 elapsed ponger 95.130277045s
 elapsed pinger 95.130297008s
 */
-
-fn bind_to_cpu_set(cpus: impl IntoIterator<Item = usize>) -> Result<(), io::Error>{
-    let mut cpuset = nix::sched::CpuSet::new();
-    for cpu in cpus {
-        cpuset.set(cpu)?;
-    }
-    let pid = nix::unistd::Pid::from_raw(0);
-    nix::sched::sched_setaffinity(pid, &cpuset)?;
-    Ok(())
-}
 
 fn main() {
     let ponger = thread::spawn(|| {
@@ -42,7 +32,7 @@ fn main() {
                 stream.write_all(&buf_send).await.unwrap();
                 // println!("ponger write buf {:?}", buf_send);
             }
-            println!("elapsed ponger {:?}", t0.elapsed())
+            elapsed(t0, ITERATIONS, "elapsed ponger");
         })
     });
     let pinger = thread::spawn(|| {
@@ -61,7 +51,7 @@ fn main() {
                 stream.read_exact(&mut buf_recv).await.unwrap();
                 // println!("pinger read buf {:?}", buf_recv);
             }
-            println!("elapsed pinger {:?}", t0.elapsed())
+            elapsed(t0, ITERATIONS, "elapsed pinger");
         })
     });
     ponger.join().unwrap();
